@@ -1,24 +1,31 @@
-// import { ethers } from "hardhat";
-// const hre = require("hardhat");
+/** @format */
 
-// async function main() {
-//   //Deploy NFTMinting Contract
-//   const Token = await ethers.getContractFactory("NFTMinting");
-//   const token = await Token.deploy();
+import hre, { ethers, upgrades } from "hardhat";
 
-//   await token.deployTransaction.wait(5);
+async function main() {
 
-//   await hre.run("verify:verify", {
-//     address: token.address,
-//     contract: "contracts/NFTMinting.sol:NFTMinting",
-//   });
+    //Deploy Admin Contract
+    const NFTMinting = await ethers.getContractFactory("NFTMinting");
+    const nft = await upgrades.deployProxy(NFTMinting, ["NFTMinting", "NM", 1e18, "0xa9571EA2EA168A6e10a69f1278fD0AC2C518cccd"], {
+        initializer: "initialize",
+    });
 
-//   console.log("Basic Contract Address-> ", token.address);
-// }
+    await nft.deployed();
+    console.log("NFT Minting Contract Address", nft.address);
 
-// main()
-//   .then(() => process.exit(0))
-//   .catch((error) => {
-//     console.log("Deploy error-> ", error);
-//     process.exit(1);
-//   });
+
+    await hre.run("verify:verify", {
+        address: nft.address,
+        contract: "contracts/NFTMinting.sol:NFTMinting",
+    });
+}
+
+main()
+    .then(() => process.exit(0))
+    .catch((error) => {
+        console.log("Deploy error-> ", error);
+        process.exit(1);
+    });
+
+// Set Assets: [Art,Watch,Gold,SPV,Fund]
+// Set Investments: ["Sale","Loan","Parcel","Fraction"]
