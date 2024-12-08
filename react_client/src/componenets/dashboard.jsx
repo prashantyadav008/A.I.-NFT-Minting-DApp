@@ -1,9 +1,9 @@
 /** @format */
 
-import React, { useEffect, useState } from "react";
+import { useEffect } from "react";
 import "./main.css";
 
-import { ContractMethods } from "./Wagmi/contractMethods";
+// import { ContractMethods } from "./Wagmi/contractMethods";
 import { DashboardHeader } from "./pages/dashboard/dashboardHeader";
 import { Content } from "./pages/dashboard/content";
 

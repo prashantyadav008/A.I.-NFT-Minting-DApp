@@ -1,19 +1,53 @@
 /** @format */
 
-import React, { useState } from "react";
+import { useState } from "react";
 
 import { Row, Col } from "react-bootstrap";
 
-import Box from "@mui/material/Box";
+import axios from "axios";
+
+import swal from "sweetalert2";
 
 export function Content() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [generatedImage, setGeneratedImage] = useState("");
 
-  const handleGenerateImage = () => {
+  const handleGenerateImage = async () => {
     // Placeholder for image generation logic
-    var image = `https://via.placeholder.com/150?text=${encodeURIComponent("")}`;
+    var image = `https://via.placeholder.com/150?text=${encodeURIComponent("Waiting for image...")}`;
+    setGeneratedImage(image);
+
+    console.log(process.env.REACT_APP_HUGGINGFACE_API_KEY);
+
+    try {
+      const response = await axios({
+        url: `https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2`,
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.REACT_APP_HUGGINGFACE_API_KEY}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        data: JSON.stringify({
+          inputs: description,
+          options: { wait_for_modal: true },
+        }),
+        responseType: "arraybuffer",
+      });
+
+      const type = response.headers["content-type"];
+      const data = response.data;
+
+      // eslint-disable-next-line no-undef
+      const base64data = Buffer.from(data).toString("base64");
+      image = `data:${type};base64,` + base64data;
+    } catch (e) {
+      image = "";
+      swal.Error("Error", "Someting went Wrong!, Image Not Generated", "error");
+      console.log("image not generated", e);
+    }
+
     setGeneratedImage(image);
   };
 

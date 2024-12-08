@@ -2,21 +2,21 @@
 
 import NFTMinting from "./ABI/NFTMinting.json";
 import { config } from "./wagmiConfig";
-import { encodeFunctionData } from "viem";
 
 import {
   getAccount,
   readContract,
-  sendTransaction,
-  waitForTransactionReceipt,
+  // sendTransaction,
+  // waitForTransactionReceipt,
 } from "@wagmi/core";
-import { Link } from "react-router-dom";
 import { sepolia } from "viem/chains";
 
 // import swal from "sweetalert";
 
 export const ContractMethods = () => {
+  // eslint-disable-next-line no-unused-vars
   const { address } = getAccount(config);
+  // eslint-disable-next-line no-undef
   const nftContract = process.env.NFTMinting;
 
   const balanceOf = async (walletAddress) => {
