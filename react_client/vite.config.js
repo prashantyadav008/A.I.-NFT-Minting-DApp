@@ -11,9 +11,6 @@ export default defineConfig(({ mode }) => {
       "process.env": env,
     },
     plugins: [react()],
-    // build: {
-    // Set base URL to include '/assets/'
-    base: "https://d3sow2ng9i7f35.cloudfront.net/",
-    // },
+    base: "/",
   };
 });

@@ -5,26 +5,44 @@ import { useState } from "react";
 import { Row, Col } from "react-bootstrap";
 
 import axios from "axios";
+import Swal from "sweetalert2";
 
-import swal from "sweetalert2";
+import { ContractMethods } from "../../Wagmi/contractMethods";
 
-export function Content() {
+export function DashboardContent() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [generatedImage, setGeneratedImage] = useState("");
+  // const [uri, setUri] = useState("");
 
   const handleGenerateImage = async () => {
+    if (name == "") {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Please fill the Name fields",
+      });
+      return false;
+    }
+
+    if (description == "") {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Please fill the Description fields",
+      });
+      return false;
+    }
     // Placeholder for image generation logic
     var image = `https://via.placeholder.com/150?text=${encodeURIComponent("Waiting for image...")}`;
     setGeneratedImage(image);
-
-    console.log(process.env.REACT_APP_HUGGINGFACE_API_KEY);
 
     try {
       const response = await axios({
         url: `https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2`,
         method: "POST",
         headers: {
+          // eslint-disable-next-line no-undef
           Authorization: `Bearer ${process.env.REACT_APP_HUGGINGFACE_API_KEY}`,
           Accept: "application/json",
           "Content-Type": "application/json",
@@ -44,7 +62,11 @@ export function Content() {
       image = `data:${type};base64,` + base64data;
     } catch (e) {
       image = "";
-      swal.Error("Error", "Someting went Wrong!, Image Not Generated", "error");
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Someting went Wrong!, Image Not Generated",
+      });
       console.log("image not generated", e);
     }
 
@@ -54,19 +76,72 @@ export function Content() {
   const submitHandler = async (e) => {
     e.preventDefault();
 
-    console.log("Sybmitting ..........", name, description, generatedImage);
+    if (name == "") {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Please fill the Name fields",
+      });
+      return false;
+    }
+
+    if (description == "") {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Please fill the Description fields",
+      });
+      return false;
+    }
+
+    if (name == "") {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Please fill the Name fields",
+      });
+      return false;
+    }
+
+    if (generatedImage == "") {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Image Not Generated",
+      });
+      return false;
+    }
+
+    try {
+      const contract = ContractMethods();
+      const response = await contract.mintNFT("walletAddress", "uri");
+
+      if (response.status) {
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: response.message,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: response.message,
+        });
+      }
+    } catch (e) {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Someting went Wrong!, Image Not Mintend",
+      });
+
+      console.log("Nft not Minted --->>", e);
+    }
   };
 
   return (
     <>
-      <Row
-        className="dashboard-content text-center content fw-bold"
-        style={{ color: "#0e3464" }}>
-        <Col>
-          <h1 className="dashboardTitle">A.I. NFT Generator</h1>
-        </Col>
-      </Row>
-
       <Row style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
         <Col className="col-md-12 d-flex justify-content-center">
           <Col className="col-md-4  text-center" style={{ marginTop: "3rem" }}>
