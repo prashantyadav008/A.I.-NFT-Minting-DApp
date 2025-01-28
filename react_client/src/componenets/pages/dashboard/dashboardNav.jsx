@@ -5,7 +5,7 @@ import { Row, Col } from "react-bootstrap";
 
 // import Swal from "sweetalert2";
 
-import { ContractMethods } from "../../Wagmi/contractMethods";
+// import { ContractMethods } from "../../Wagmi/contractMethods";
 
 export function DashboardNav() {
   const [mintPaused, setMintPaused] = useState();
@@ -20,12 +20,13 @@ export function DashboardNav() {
       .classList.add("is-active");
 
     try {
-      const contract = ContractMethods();
-      const minitingPausedResult = await contract.mintPaused();
+      // const contract = ContractMethods();
+      // const minitingPausedResult = await contract.mintPaused();
 
-      console.log("minitingPausedResult", minitingPausedResult);
+      // console.log("minitingPausedResult", minitingPausedResult);
 
-      setMintPaused(minitingPausedResult);
+      setMintPaused(false);
+      // setMintPaused(minitingPausedResult);
     } catch (e) {
       console.log("Nft not Minted --->>", e);
     }

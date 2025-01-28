@@ -1,7 +1,7 @@
 /** @format */
 
 import NFTMinting from "./ABI/NFTMinting.json";
-import { config } from "./wagmiConfig";
+import { config, walletClient } from "./wagmiConfig";
 // eslint-disable-next-line no-unused-vars
 import { parseEther } from "viem";
 import {
@@ -19,7 +19,7 @@ export const ContractMethods = () => {
   // eslint-disable-next-line no-unused-vars
   const { address } = getAccount(config);
   // eslint-disable-next-line no-undef
-  const nftContract = process.env.NFTMinting;
+  const nftContract = process.env.REACT_APP_NFTMinting;
 
   const balanceOf = async (walletAddress) => {
     const result = await readContract(config, {
@@ -115,8 +115,6 @@ export const ContractMethods = () => {
   };
 
   const mintNFT = async (walletAddress, imageUri) => {
-    console.log("addressdsfasdf --->>>", address);
-
     if (address === undefined) {
       return {
         status: false,
@@ -134,16 +132,12 @@ export const ContractMethods = () => {
         address: nftContract,
         functionName: "mint",
         value: parseEther("0.1"),
-        args: ["0xaAFE58F7419327Bfde42ef7419fAdEA5d53FC017", "uri"],
+        args: [walletAddress, imageUri],
         chainId: sepolia.id,
       });
 
-      console.log("request", request);
-
       // Perform the actual contract write operation
       const transactionHash = await writeContract(config, request);
-
-      console.log("transactionHash", transactionHash);
 
       // Wait for the transaction receipt
       result = await waitForTransactionReceipt(config, {
@@ -151,9 +145,7 @@ export const ContractMethods = () => {
         hash: transactionHash,
       });
 
-      console.log("result", result);
-
-      if (result.status !== "success") {
+      if (result.status == "success") {
         result = {
           status: true,
           message: "Mint Minted Successfully",
@@ -177,7 +169,7 @@ export const ContractMethods = () => {
   };
 
   const toggleMintPaused = async (status) => {
-    console.log("addressdsfasdf --->>>", address);
+    await walletClient.switchChain({ id: sepolia.id });
 
     if (address === undefined) {
       return {
@@ -207,7 +199,7 @@ export const ContractMethods = () => {
         hash: transactionHash,
       });
 
-      if (result.status !== "success") {
+      if (result.status == "success") {
         result = {
           status: true,
           message: status
