@@ -9,7 +9,8 @@ import { config } from "./wagmiConfig.jsx";
 // 0. Setup queryClient
 const queryClient = new QueryClient();
 
-const projectId = "503da7092f5a099b80c2d5604f00cd64";
+// eslint-disable-next-line no-undef
+const projectId = process.env.REACT_APP_WALLETCONECT_PROJECTID;
 
 // 3. Create modal
 createWeb3Modal({

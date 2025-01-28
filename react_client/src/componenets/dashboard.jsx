@@ -1,15 +1,14 @@
 /** @format */
 
-import React, { useEffect, useState } from "react";
+import { useEffect } from "react";
 import "./main.css";
 
-import { ContractMethods } from "./Wagmi/contractMethods";
+// import { ContractMethods } from "./Wagmi/contractMethods";
 import { DashboardHeader } from "./pages/dashboard/dashboardHeader";
-import { Content } from "./pages/dashboard/content";
+import { DashboardNav } from "./pages/dashboard/dashboardNav";
+import { DashboardContent } from "./pages/dashboard/dashboardContent";
 
 export const Dashboard = () => {
-  // const [maxSupply, setMaxSupply] = useState(0);
-
   useEffect(() => {
     getDetail();
   }, []);
@@ -35,11 +34,12 @@ export const Dashboard = () => {
   return (
     <>
       <DashboardHeader />
-      <>
-        <div className="dashboardMain">
-          <Content />
-        </div>
-      </>
+
+      <DashboardNav />
+
+      <div className="dashboardMain">
+        <DashboardContent />
+      </div>
     </>
   );
 };
