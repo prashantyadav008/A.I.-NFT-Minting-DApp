@@ -36,6 +36,17 @@ export const ContractMethods = () => {
     return Number(result);
   };
 
+  const mintPrice = async () => {
+    const result = await readContract(config, {
+      abi: NFTMinting,
+      address: nftContract,
+      functionName: "mintPrice",
+      chainId: sepolia.id,
+    });
+
+    return Number(result);
+  };
+
   const ownerOf = async (tokenId) => {
     try {
       const result = await readContract(config, {
@@ -172,12 +183,14 @@ export const ContractMethods = () => {
     let result;
 
     try {
+      let mintingPrice = await mintPrice();
+
       // Simulate the contract call to ensure parameters are correct
       const { request } = await simulateContract(config, {
         abi: NFTMinting,
         address: nftContract,
         functionName: "mint",
-        value: parseEther("0.1"),
+        value: parseEther((mintingPrice / 1e18).toString()),
         args: [walletAddress, imageUri],
         chainId: sepolia.id,
       });

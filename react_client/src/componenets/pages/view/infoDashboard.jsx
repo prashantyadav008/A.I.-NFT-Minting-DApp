@@ -145,7 +145,7 @@ export function InfoDashboard() {
                   <th scope="col">Minted Cost</th>
                   <th scope="col">Minted At</th>
                   <th scope="col">NFT</th>
-                  <th scope="col">Withdrawal Amount</th>
+                  <th scope="col">Withdrawal NFT</th>
                 </tr>
               </thead>
 
