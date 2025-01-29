@@ -8,6 +8,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 // import pagenot found component
 
 import { Dashboard } from "./componenets/dashboard.jsx";
+import { ViewInfo } from "./componenets/viewInfo.jsx";
 import { PageNotFound } from "./componenets/pages/pageNotFound/pageNotFound.jsx";
 import { Web3ModalProvider } from "./componenets/Wagmi/Web3ModalProvider.jsx";
 
@@ -15,6 +16,7 @@ function App() {
   const router = createBrowserRouter([
     { path: "*", element: <PageNotFound /> },
     { path: "/", element: <Dashboard /> },
+    { path: "/viewMintedNFT", element: <ViewInfo /> },
   ]);
 
   return (

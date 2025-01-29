@@ -1,56 +1,65 @@
 /** @format */
 
-import { useState, useEffect } from "react";
 import { Row, Col } from "react-bootstrap";
 
-// import Swal from "sweetalert2";
+import { WagmiContractConfig } from "../../Wagmi/wagmiContractConfig";
 
-// import { ContractMethods } from "../../Wagmi/contractMethods";
+import { useReadContracts } from "wagmi";
 
 export function DashboardNav() {
-  const [mintPaused, setMintPaused] = useState();
+  const { data, error, isPending } = useReadContracts({
+    contracts: [
+      {
+        ...WagmiContractConfig,
+        functionName: "mintPaused",
+      },
+      {
+        ...WagmiContractConfig,
+        functionName: "mintPrice",
+      },
+      {
+        ...WagmiContractConfig,
+        functionName: "totalNFT",
+      },
+    ],
+  });
 
-  useEffect(() => {
-    getDetail();
-  }, []);
+  var [mintPaused, mintPrice, totalNFT] = data || [];
 
-  const getDetail = async () => {
-    document
-      .getElementById("loaderVisibilityFetching")
-      .classList.add("is-active");
+  if (!isPending) {
+    mintPaused = mintPaused?.result;
+    mintPrice = Number(mintPrice?.result);
+    totalNFT = Number(totalNFT?.result);
+  }
 
-    try {
-      // const contract = ContractMethods();
-      // const minitingPausedResult = await contract.mintPaused();
+  if (isPending) return <div>Loading...</div>;
 
-      // console.log("minitingPausedResult", minitingPausedResult);
-
-      setMintPaused(false);
-      // setMintPaused(minitingPausedResult);
-    } catch (e) {
-      console.log("Nft not Minted --->>", e);
-    }
-
-    document
-      .getElementById("loaderVisibilityFetching")
-      .classList.remove("is-active");
-  };
+  if (error) return <div>Error: {error.shortMessage || error.message}</div>;
 
   return (
     <>
-      <Row
-        className="dashboard-content text-center content fw-bold"
-        style={{ color: "#0e3464" }}>
-        <Col>
-          <h1 className="dashboardTitle">A.I. NFT Generator</h1>
-        </Col>
-      </Row>
-
-      <Row className="text-center content fw-bold">
-        <Col>
+      <Row className="text-center content d-flex justify-content-center">
+        <Col md="4">
           <p className="dashboardSubTitle">
             <span className="dashboardSubTitleText">
-              {mintPaused ? "Minting Paused" : "Minting Open"}
+              <b>Mint Status:</b> {mintPaused ? "Closed" : "Open"}
+            </span>
+          </p>
+        </Col>
+        <Col md="4">
+          <p className="dashboardSubTitle">
+            <span className="dashboardSubTitleText">
+              <b>Minting Price (per NFT):</b>{" "}
+              {mintPrice > 999999999999
+                ? mintPrice / 1e18 + " ETH"
+                : mintPrice + " Wei"}
+            </span>
+          </p>
+        </Col>
+        <Col md="4">
+          <p className="dashboardSubTitle">
+            <span className="dashboardSubTitleText">
+              <b>Total NFT Minted:</b> {totalNFT}
             </span>
           </p>
         </Col>

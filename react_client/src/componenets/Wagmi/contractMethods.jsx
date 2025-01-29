@@ -1,17 +1,21 @@
 /** @format */
 
 import NFTMinting from "./ABI/NFTMinting.json";
-import { config, walletClient } from "./wagmiConfig";
+import { config } from "./wagmiConfig";
+import { WagmiContractConfig } from "./wagmiContractConfig";
 // eslint-disable-next-line no-unused-vars
 import { parseEther } from "viem";
 import {
   getAccount,
   readContract,
+  readContracts,
   simulateContract,
   writeContract,
   waitForTransactionReceipt,
 } from "@wagmi/core";
 import { sepolia } from "viem/chains";
+
+import dummyImage from "../../assets/dummyImage.png";
 
 // import swal from "sweetalert";
 
@@ -20,88 +24,6 @@ export const ContractMethods = () => {
   const { address } = getAccount(config);
   // eslint-disable-next-line no-undef
   const nftContract = process.env.REACT_APP_NFTMinting;
-
-  const balanceOf = async (walletAddress) => {
-    const result = await readContract(config, {
-      abi: NFTMinting,
-      address: nftContract,
-      functionName: "balanceOf",
-      args: [walletAddress],
-      chainId: sepolia.id,
-    });
-
-    return result;
-  };
-
-  const mintPaused = async () => {
-    const result = await readContract(config, {
-      abi: NFTMinting,
-      address: nftContract,
-      functionName: "mintPaused",
-      chainId: sepolia.id,
-    });
-
-    return result;
-  };
-
-  const nftMintPrice = async (walletAddress, tokenId) => {
-    const result = await readContract(config, {
-      abi: NFTMinting,
-      address: nftContract,
-      functionName: "mintPrice",
-      args: [walletAddress, tokenId],
-      chainId: sepolia.id,
-    });
-
-    return result;
-  };
-
-  const userTotalMintedCost = async (walletAddress, tokenId) => {
-    const result = await readContract(config, {
-      abi: NFTMinting,
-      address: nftContract,
-      functionName: "mintedCost",
-      args: [walletAddress, tokenId],
-      chainId: sepolia.id,
-    });
-
-    return result;
-  };
-
-  const userTotalMintedCount = async (walletAddress, tokenId) => {
-    const result = await readContract(config, {
-      abi: NFTMinting,
-      address: nftContract,
-      functionName: "mintedCount",
-      args: [walletAddress, tokenId],
-      chainId: sepolia.id,
-    });
-
-    return result;
-  };
-
-  const ownerOf = async (tokenId) => {
-    const result = await readContract(config, {
-      abi: NFTMinting,
-      address: nftContract,
-      functionName: "ownerOf",
-      args: [tokenId],
-      chainId: sepolia.id,
-    });
-
-    return result;
-  };
-
-  const tokenURI = async () => {
-    const result = await readContract(config, {
-      abi: NFTMinting,
-      address: nftContract,
-      functionName: "tokenURI",
-      chainId: sepolia.id,
-    });
-
-    return String(result);
-  };
 
   const totalNFT = async () => {
     const result = await readContract(config, {
@@ -112,6 +34,130 @@ export const ContractMethods = () => {
     });
 
     return Number(result);
+  };
+
+  const ownerOf = async (tokenId) => {
+    try {
+      const result = await readContract(config, {
+        abi: NFTMinting,
+        address: nftContract,
+        functionName: "ownerOf",
+        args: [tokenId],
+        chainId: sepolia.id,
+      });
+
+      return result;
+    } catch (error) {
+      return "0x0000000000000000000000000000000000000000";
+    }
+  };
+
+  const getUserDetails = async (walletAddress) => {
+    try {
+      const totalNFTs = await totalNFT();
+
+      let result = [];
+
+      for (let tokenId = 1; tokenId <= totalNFTs; tokenId++) {
+        const nftOwner = await ownerOf(tokenId);
+
+        if (walletAddress == nftOwner) {
+          let userDetail = await readContracts(config, {
+            contracts: [
+              {
+                ...WagmiContractConfig,
+                functionName: "mintedCost",
+                args: [walletAddress, tokenId],
+              },
+              {
+                ...WagmiContractConfig,
+                functionName: "mintedAt",
+                args: [tokenId],
+              },
+              {
+                ...WagmiContractConfig,
+                functionName: "tokenURI",
+                args: [tokenId],
+              },
+            ],
+          });
+
+          result.push({
+            nftId: tokenId,
+            mintedCost: Number(userDetail[0]?.result),
+            mintedAt: new Date(
+              Number(userDetail[1]?.result) * 1000
+            ).toLocaleDateString("sv"),
+            tokenURI: await renderFilePreview(userDetail[2]?.result),
+          });
+        }
+      }
+
+      return {
+        status: true,
+        result: result,
+      };
+    } catch (error) {
+      console.log("getUserDetails error --->>> ", error);
+      return {
+        status: false,
+        result: [],
+      };
+    }
+  };
+
+  const detectFileType = async (url) => {
+    try {
+      const response = await fetch(url, { method: "HEAD" }); // Metadata fetch karne ke liye HEAD request
+      const contentType = response.headers.get("Content-Type");
+
+      console.log("contentType --->>> ", contentType);
+
+      if (contentType.includes("image")) {
+        return "image";
+      } else if (contentType.includes("video")) {
+        return "video";
+      } else if (contentType.includes("pdf")) {
+        return "pdf";
+      } else {
+        return "other";
+      }
+    } catch (error) {
+      console.error("Error detecting file type:", error);
+      return "unknown";
+    }
+  };
+
+  const renderFilePreview = async (url) => {
+    let fileUrl;
+    try {
+      let response = await fetch(url);
+      let data = await response.json();
+
+      response = await fetch(data.image);
+
+      fileUrl = response.url;
+
+      if (!fileUrl) {
+        return <img src={dummyImage} alt="NFT Minting" width="150" />;
+      }
+
+      const fileType = await detectFileType(fileUrl);
+
+      if (["other"].includes(fileType)) {
+        return <img src={dummyImage} alt="NFT Minting" width="150" />;
+
+        // return <img src={fileUrl} alt="NFT" width="150" />;
+      } else {
+        return (
+          <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+            View NFT
+          </a>
+        );
+      }
+    } catch (error) {
+      return <img src={dummyImage} alt="NFT Minting" width="150" />;
+    }
   };
 
   const mintNFT = async (walletAddress, imageUri) => {
@@ -168,13 +214,18 @@ export const ContractMethods = () => {
     return result;
   };
 
-  const toggleMintPaused = async (status) => {
-    await walletClient.switchChain({ id: sepolia.id });
-
+  const withdrawalNFT = async (walletAddress, nftId) => {
     if (address === undefined) {
       return {
         status: false,
         message: "Please Connect Wallet",
+      };
+    }
+
+    if (address !== walletAddress) {
+      return {
+        status: false,
+        message: "Only Owner Can Withdrawal NFT",
       };
     }
 
@@ -185,8 +236,8 @@ export const ContractMethods = () => {
       const { request } = await simulateContract(config, {
         abi: NFTMinting,
         address: nftContract,
-        functionName: "toggleMintPaused",
-        args: [status],
+        functionName: "withdrawNFT",
+        args: [nftId],
         chainId: sepolia.id,
       });
 
@@ -202,22 +253,20 @@ export const ContractMethods = () => {
       if (result.status == "success") {
         result = {
           status: true,
-          message: status
-            ? "Mint Paused Successfully"
-            : "Mint Un-Paused Successfully",
+          message: "Withdrawal NFT Successfully",
         };
       } else {
         result = {
           status: false,
-          message: "Something went wrong! Minting Paused-UnPaused Failed",
+          message: "Something went wrong! Withdrawal NFT Failed",
         };
       }
     } catch (error) {
-      console.error("Error minting NFT:", error);
+      console.error("Error Withdrawing NFT:", error);
 
       result = {
         status: false,
-        message: "Something went wrong! Minting Pause Updation Failed",
+        message: "Something went wrong! Withdrawal NFT Failed",
       };
     }
 
@@ -226,18 +275,10 @@ export const ContractMethods = () => {
 
   return {
     // read method
-    balanceOf: balanceOf,
-    mintPaused: mintPaused,
-    nftMintPrice: nftMintPrice,
-    userTotalMintedCost: userTotalMintedCost,
-    userTotalMintedCount: userTotalMintedCount,
-    ownerOf: ownerOf,
-    tokenURI: tokenURI,
-    totalNFT: totalNFT,
+    getUserDetails: getUserDetails,
 
     // write method
     mintNFT: mintNFT,
-    toggleMintPaused: toggleMintPaused,
-    // releasedCategoryToken: releasedCategoryToken,
+    withdrawalNFT: withdrawalNFT,
   };
 };

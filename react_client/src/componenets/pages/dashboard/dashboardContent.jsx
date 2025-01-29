@@ -90,10 +90,21 @@ export function DashboardContent() {
 
     setGeneratedImage(image);
   };
-  // eslint-disable-next-line no-unused-vars
+
+  const base64ToBlob = (base64, mimeType) => {
+    let byteCharacters = atob(base64.split(",")[1]); // Remove data URI scheme
+    let byteArrays = [];
+
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteArrays.push(byteCharacters.charCodeAt(i));
+    }
+
+    let byteArray = new Uint8Array(byteArrays);
+    return new Blob([byteArray], { type: mimeType });
+  };
 
   async function createURI() {
-    const extractedType = generatedImage.split(";")[0].split("/")[1];
+    // const extractedType = generatedImage.split(";")[0].split("/")[1];
 
     const pinata = new PinataSDK({
       // eslint-disable-next-line no-undef
@@ -101,20 +112,18 @@ export function DashboardContent() {
       pinataGateway: "example-gateway.mypinata.cloud",
     });
 
-    const blob = new Blob([name], { type: fileType });
-    const file = new File([blob], name + "." + extractedType, {
-      type: fileType,
-    });
+    const blob = base64ToBlob(generatedImage, fileType); // Convert base64 to Blob
+    const file = new File([blob], name, { type: fileType });
+
     var result = await pinata.upload.file(file);
-    console.log("upload --->>", result.IpfsHash);
+    console.log("Uploaded to IPFS: ", result.IpfsHash);
 
     if (result.IpfsHash) {
       let upload = await pinata.upload.json({
         name: "Pinnie NFT",
         description: "A Pinnie NFT from Pinata",
-        image:
-          "https://lime-tiny-constrictor-342.mypinata.cloud/ipfs/" +
-          result.IpfsHash,
+        // eslint-disable-next-line no-undef
+        image: process.env.REACT_APP_PINATA_URL + result.IpfsHash,
       });
 
       console.log("upload --->>  ", upload.IpfsHash);
@@ -182,8 +191,8 @@ export function DashboardContent() {
     document.getElementById("loaderVisibility").classList.add("is-active");
 
     let uri = await createURI();
-    uri =
-      "https://lime-tiny-constrictor-342.mypinata.cloud/ipfs/" + uri.IpfsHash;
+    // eslint-disable-next-line no-undef
+    uri = process.env.REACT_APP_PINATA_URL + uri.IpfsHash;
 
     console.log("uri ---->>>", uri);
 
@@ -192,6 +201,13 @@ export function DashboardContent() {
       const response = await contract.mintNFT(walletAddress, uri);
 
       if (response.status) {
+        setIsAI_NFT(false);
+        setName("");
+        setDescription("");
+        setWalletAddress("");
+        setGeneratedImage("");
+        setFileType("");
+
         Swal.fire({
           icon: "success",
           title: "Success",
@@ -219,184 +235,198 @@ export function DashboardContent() {
 
   return (
     <>
-      {/* Radio Button */}
-      <Col className="col-md-12 d-flex justify-content-center">
-        <Col className="col-md-5  text-center" style={{ marginTop: "3rem" }}>
-          <label>
-            <input
-              type="radio"
-              value="false"
-              checked={isAI_NFT === false}
-              onChange={(e) => setIsAI_NFT(e.target.value === "false")}
-            />{" "}
-            Upload Image
-          </label>{" "}
-          <label>
-            <input
-              type="radio"
-              value="true"
-              checked={isAI_NFT === true}
-              onChange={(e) => setIsAI_NFT(e.target.value === "true")}
-            />{" "}
-            Generate Image
-          </label>
-        </Col>
-      </Col>
-
-      {!isAI_NFT ? (
-        <Row style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-          <Col className="col-md-12 d-flex justify-content-center">
-            <Col
-              className="col-md-5  text-center"
-              style={{ marginTop: "3rem" }}>
-              <div style={{ marginBottom: "10px" }}>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter NFT Name"
-                  style={{ marginLeft: "10px", padding: "5px", width: "410px" }}
-                />
-              </div>
-              <div style={{ marginBottom: "10px" }}>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Enter NFT Description"
-                  style={{
-                    marginLeft: "10px",
-                    padding: "5px",
-                    width: "410px",
-                    height: "80px",
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: "10px" }}>
-                <input
-                  type="file"
-                  accept="image/*,video/*,application/pdf" // Accept only images, videos, and PDFs
-                  onChange={handleFileChange}
-                  style={{ marginLeft: "10px", padding: "5px", width: "410px" }}
-                />
-              </div>
-
-              <div style={{ marginBottom: "10px" }}>
-                <input
-                  type="text"
-                  value={walletAddress}
-                  onChange={(e) => setWalletAddress(e.target.value)}
-                  placeholder="Enter Wallet Address"
-                  style={{
-                    marginLeft: "10px",
-                    padding: "5px",
-                    width: "410px",
-                  }}
-                />
-              </div>
-
-              <button
-                onClick={submitHandler}
-                className="btn btn-success"
-                style={{
-                  padding: "10px 20px",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                }}>
-                Mint NFT
-              </button>
-            </Col>
-
-            <Col className="col-md-4">
-              <div
-                style={{
-                  border: "2px solid #0e3464",
-                  padding: "10px",
-                  minHeight: "350px",
-                  textAlign: "center",
-                }}>
-                {generatedImage !== "" ? (
-                  fileType.startsWith("image/") ? (
-                    // For Images
-                    <img
-                      src={generatedImage}
-                      alt="Selected File"
-                      style={{
-                        height: "320px",
-                        width: "100%",
-                      }}
-                    />
-                  ) : fileType.startsWith("video/") ? (
-                    // For Videos
-                    <video controls style={{ height: "320px", width: "100%" }}>
-                      <source src={generatedImage} type={fileType} />
-                      Your browser does not support the video tag.
-                    </video>
-                  ) : fileType === "application/pdf" ? (
-                    // For PDFs
-                    <iframe
-                      src={generatedImage}
-                      title="PDF Preview"
-                      style={{ height: "320px", width: "100%" }}
-                    />
-                  ) : (
-                    // For unsupported types
-                    <p>Unsupported file type selected.</p>
-                  )
-                ) : (
-                  "Selected File will appear here."
-                )}
-              </div>
-            </Col>
+      <Row>
+        {/* Radio Button */}
+        <Col className="d-flex justify-content-center">
+          <Col className="col-md-5  text-center">
+            <label>
+              <input
+                type="radio"
+                value="false"
+                checked={isAI_NFT === false}
+                onChange={() => setIsAI_NFT(false)}
+              />{" "}
+              Upload Image
+            </label>{" "}
+            <label>
+              <input
+                type="radio"
+                value="true"
+                checked={isAI_NFT === true}
+                onChange={() => setIsAI_NFT(true)}
+              />{" "}
+              Generate Image
+            </label>
           </Col>
-        </Row>
-      ) : (
-        <Row style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-          <Col className="col-md-12 d-flex justify-content-center">
-            <Col
-              className="col-md-5  text-center"
-              style={{ marginTop: "3rem" }}>
-              <div style={{ marginBottom: "10px" }}>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter NFT Name"
-                  style={{ marginLeft: "10px", padding: "5px", width: "410px" }}
-                />
-              </div>
-              <div style={{ marginBottom: "10px" }}>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Enter NFT Description"
+        </Col>
+
+        {!isAI_NFT ? (
+          <Row style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+            <Col className="col-md-12 d-flex justify-content-center">
+              <Col
+                className="col-md-5  text-center"
+                style={{ marginTop: "3rem" }}>
+                <div style={{ marginBottom: "10px" }}>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter NFT Name"
+                    style={{
+                      marginLeft: "10px",
+                      padding: "5px",
+                      width: "410px",
+                    }}
+                  />
+                </div>
+                <div style={{ marginBottom: "10px" }}>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Enter NFT Description"
+                    style={{
+                      marginLeft: "10px",
+                      padding: "5px",
+                      width: "410px",
+                      height: "80px",
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: "10px" }}>
+                  <input
+                    type="file"
+                    accept="image/*,video/*,application/pdf" // Accept only images, videos, and PDFs
+                    onChange={handleFileChange}
+                    style={{
+                      marginLeft: "10px",
+                      padding: "5px",
+                      width: "410px",
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: "10px" }}>
+                  <input
+                    type="text"
+                    value={walletAddress}
+                    onChange={(e) => setWalletAddress(e.target.value)}
+                    placeholder="Enter Wallet Address"
+                    style={{
+                      marginLeft: "10px",
+                      padding: "5px",
+                      width: "410px",
+                    }}
+                  />
+                </div>
+
+                <button
+                  onClick={submitHandler}
+                  className="btn btn-success"
                   style={{
-                    marginLeft: "10px",
-                    padding: "5px",
-                    width: "410px",
-                    height: "80px",
-                  }}
-                />
-              </div>
-              <button
-                onClick={handleGenerateImage}
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#0e3464",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                }}>
-                Generate Image
-              </button>
+                    padding: "10px 20px",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                  }}>
+                  Mint NFT
+                </button>
+              </Col>
 
-              <br />
+              <Col className="col-md-4">
+                <div
+                  style={{
+                    border: "2px solid #0e3464",
+                    padding: "10px",
+                    minHeight: "350px",
+                    textAlign: "center",
+                  }}>
+                  {generatedImage !== "" ? (
+                    fileType.startsWith("image/") ? (
+                      // For Images
+                      <img
+                        src={generatedImage}
+                        alt="Selected File"
+                        style={{
+                          height: "320px",
+                          width: "100%",
+                        }}
+                      />
+                    ) : fileType.startsWith("video/") ? (
+                      // For Videos
+                      <video
+                        controls
+                        style={{ height: "320px", width: "100%" }}>
+                        <source src={generatedImage} type={fileType} />
+                        Your browser does not support the video tag.
+                      </video>
+                    ) : fileType === "application/pdf" ? (
+                      // For PDFs
+                      <iframe
+                        src={generatedImage}
+                        title="PDF Preview"
+                        style={{ height: "320px", width: "100%" }}
+                      />
+                    ) : (
+                      // For unsupported types
+                      <p>Unsupported file type selected.</p>
+                    )
+                  ) : (
+                    "Selected File will appear here."
+                  )}
+                </div>
+              </Col>
+            </Col>
+          </Row>
+        ) : (
+          <Row style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+            <Col className="col-md-12 d-flex justify-content-center">
+              <Col
+                className="col-md-5  text-center"
+                style={{ marginTop: "3rem" }}>
+                <div style={{ marginBottom: "10px" }}>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter NFT Name"
+                    style={{
+                      marginLeft: "10px",
+                      padding: "5px",
+                      width: "410px",
+                    }}
+                  />
+                </div>
+                <div style={{ marginBottom: "10px" }}>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Enter NFT Description"
+                    style={{
+                      marginLeft: "10px",
+                      padding: "5px",
+                      width: "410px",
+                      height: "80px",
+                    }}
+                  />
+                </div>
+                <button
+                  onClick={handleGenerateImage}
+                  style={{
+                    padding: "10px 20px",
+                    backgroundColor: "#0e3464",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                  }}>
+                  Generate Image
+                </button>
 
-              <br />
-              {generatedImage && (
+                <br />
+                <br />
+
                 <div style={{ marginBottom: "10px" }}>
                   <input
                     type="text"
@@ -410,43 +440,43 @@ export function DashboardContent() {
                   />
                   <br />
                 </div>
-              )}
 
-              <button
-                onClick={submitHandler}
-                className="btn btn-success"
-                style={{
-                  padding: "10px 20px",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                }}>
-                Mint NFT
-              </button>
+                <button
+                  onClick={submitHandler}
+                  className="btn btn-success"
+                  style={{
+                    padding: "10px 20px",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                  }}>
+                  Mint NFT
+                </button>
+              </Col>
+              <Col className="col-md-4">
+                <div
+                  style={{
+                    border: "2px solid #0e3464",
+                    padding: "10px",
+                    minHeight: "350px",
+                    textAlign: "center",
+                  }}>
+                  {generatedImage ? (
+                    <img
+                      src={generatedImage}
+                      alt="Generated NFT"
+                      style={{ height: "350px", width: "100%" }}
+                    />
+                  ) : (
+                    "Generated image will appear here."
+                  )}
+                </div>
+              </Col>
             </Col>
-            <Col className="col-md-4">
-              <div
-                style={{
-                  border: "2px solid #0e3464",
-                  padding: "10px",
-                  minHeight: "350px",
-                  textAlign: "center",
-                }}>
-                {generatedImage ? (
-                  <img
-                    src={generatedImage}
-                    alt="Generated NFT"
-                    style={{ height: "350px", width: "100%" }}
-                  />
-                ) : (
-                  "Generated image will appear here."
-                )}
-              </div>
-            </Col>
-          </Col>
-        </Row>
-      )}
+          </Row>
+        )}
+      </Row>
     </>
   );
 }

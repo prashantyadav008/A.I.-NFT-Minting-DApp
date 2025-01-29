@@ -20,7 +20,7 @@ contract NFTMinting is
     uint256 public mintPrice;
     bool public mintPaused;
 
-    mapping(address => uint256[]) public mintedCount;
+    mapping(uint => uint256) public mintedAt;
     mapping(address => mapping(uint => uint256)) public mintedCost;
 
     function initialize(
@@ -51,7 +51,8 @@ contract NFTMinting is
         _safeMint(recipient, newTokenId);
         _setTokenURI(newTokenId, baseURI);
 
-        mintedCount[recipient].push(newTokenId);
+        mintedAt[newTokenId] = block.timestamp;
+
         mintedCost[recipient][newTokenId] = msg.value;
 
         return newTokenId;
