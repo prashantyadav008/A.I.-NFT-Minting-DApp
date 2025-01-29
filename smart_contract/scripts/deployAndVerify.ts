@@ -5,7 +5,7 @@ import hre, { ethers, upgrades } from "hardhat";
 async function main() {
     //Deploy NFT Miniting Contract
     const NFTMinting = await ethers.getContractFactory("NFTMinting");
-    const nft = await upgrades.deployProxy(NFTMinting, ["NFTMinting", "NM", 1, "0xADAbBb860C99ea6A7619F263c673ecC1f06e9A89"], {
+    const nft = await upgrades.deployProxy(NFTMinting, ["NFTMinting", "NM", 1000000000000000, "0xADAbBb860C99ea6A7619F263c673ecC1f06e9A89"], {
         initializer: "initialize",
     });
 

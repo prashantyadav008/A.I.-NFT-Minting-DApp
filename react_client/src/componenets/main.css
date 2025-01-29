@@ -569,10 +569,6 @@ header.dashboard-toolbar .heading {
   color: #2553a5;
 }
 
-.dashboardMain {
-  max-width: 99%;
-}
-
 button.btn-primary--outline {
   border: 1px solid #2553a5;
   color: #2553a5;
