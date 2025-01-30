@@ -7,10 +7,10 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 // import pagenot found component
 
-import { Dashboard } from "./componenets/dashboard.jsx";
-import { ViewInfo } from "./componenets/viewInfo.jsx";
-import { PageNotFound } from "./componenets/pages/pageNotFound/pageNotFound.jsx";
-import { Web3ModalProvider } from "./componenets/Wagmi/Web3ModalProvider.jsx";
+import { Dashboard } from "./components/dashboard.jsx";
+import { ViewInfo } from "./components/viewInfo.jsx";
+import { PageNotFound } from "./components/pages/pageNotFound/pageNotFound.jsx";
+import { Web3ModalProvider } from "./components/Wagmi/Web3ModalProvider.jsx";
 
 function App() {
   const router = createBrowserRouter([

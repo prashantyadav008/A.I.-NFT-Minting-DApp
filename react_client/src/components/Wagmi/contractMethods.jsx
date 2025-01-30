@@ -161,7 +161,11 @@ export const ContractMethods = () => {
         // return <img src={fileUrl} alt="NFT" width="150" />;
       } else {
         return (
-          <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+          <a
+            className="text-decoration-none"
+            href={fileUrl}
+            target="_blank"
+            rel="noopener noreferrer">
             View NFT
           </a>
         );
