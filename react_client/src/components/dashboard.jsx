@@ -4,7 +4,6 @@ import "./main.css";
 
 import { Row, Col } from "react-bootstrap";
 
-// import { ContractMethods } from "./Wagmi/contractMethods";
 import { DashboardHeader } from "./pages/dashboard/dashboardHeader";
 import { DashboardNav } from "./pages/dashboard/dashboardNav";
 import { DashboardContent } from "./pages/dashboard/dashboardContent";
