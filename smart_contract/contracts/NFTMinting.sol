@@ -40,8 +40,8 @@ contract NFTMinting is
         address recipient,
         string memory baseURI
     ) external payable nonReentrant returns (uint256) {
-        require(!mintPaused, "Minting is paused");
-        require(msg.value >= mintPrice, "Insufficient payment");
+        require(!mintPaused, "Minting is paused!");
+        require(msg.value >= mintPrice, "Insufficient payment!");
 
         unchecked {
             totalNFT++;
